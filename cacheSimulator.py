@@ -11,14 +11,12 @@
 import os
 import sys
 import math
+import numpy as np
 
 #****************************************************************************************************#
 # Initializing the physical memory
 print("*** Welcome to the cache simulator ***")
 print("initialize the RAM:")
-print("init-ram 0x00 0xFF")
-print("ram successfully initialized!")
-
 # some error catching for file reading
 try:
     fileName = sys.argv[1]
@@ -26,10 +24,25 @@ try:
 except:
     print("Error: File not found/selected.")
     sys.exit()
-
-#for line in inputFile:
-#do something with it lol
-#inputFile.close()
+# placing the file into an array
+with open(sys.argv[1]) as inputFile:
+    dataArray = np.array (inputFile.read().splitlines())
+    numAddresses = len(dataArray)
+    
+print (dataArray)
+# hex addresses in an array
+print("init-ram 0x00 0xFF")
+x = np.empty((0, 255))
+start = 0
+end = 255
+for address in range (start, end+1):
+    address = hex(address)
+    if (len(address) == 3):
+        address = ("0x0" + address[-1])
+    x = np.append(x, address)
+            
+print(x)
+print("ram successfully initialized!")
 
 #****************************************************************************************************#
 # Configuring Cache

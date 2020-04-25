@@ -41,8 +41,9 @@ for address in range (0, 256):
     
 #Dictionary for the RAM
 w = dict(zip(x, dataArray.T))
-#print (w)
+#print (f"{w[0x03]}")
 print("ram successfully initialized!")
+#sys.exit()
 #****************************************************************************************************#
 # Configuring Cache
 
@@ -96,16 +97,16 @@ Write_miss_policy(write_miss)
 
 # Simulating Functions
 def cache_read():
-    print("set:" + s)
-    print("tag:" + t)
+    print(f"set:{s}")
+    print(f"tag:{t}")
     print("hit:")
     print("eviction_line:")
     print("ram_address:")
     print("data:")
 
 def cache_write():
-    print("set:" + s)
-    print("tag:" + t)
+    print(f"set:{s}")
+    print(f"tag:{t}")
     print("hit:")
     print("eviction_line:")
     print("ram_address:")
@@ -113,18 +114,18 @@ def cache_write():
     print("dirty_bit:")
 
 def cache_view():
-    print("cache_size:" + cache_size)
-    print("data_block_size:" + data_size)
-    print("associativity:" + associativity)
-    print("replacement_policy:" + replace)
-    print("write_hit_policy:" + write_hit)
-    print("write_miss_policy:" + write_miss)
+    print(f"cache_size:{cache_size}")
+    print(f"data_block_size:{data_size}")
+    print(f"associativity:{associativity}")
+    print(f"replacement_policy:{replace}")
+    print(f"write_hit_policy:{write_hit}")
+    print(f"write_miss_policy:{write_miss}")
     print("number_of_cache_hits:")
     print("number_of_cache_misses:")
     print("cache_content:")
 
 def memory_view():
-    print("memory_size:")
+    print(f"memory_size: {len(dataArray)}")
     print("memory_content:")
     print("Address:Data")
     for i in range(len(x)):

@@ -29,21 +29,20 @@ with open(sys.argv[1]) as inputFile:
     dataArray = np.array (inputFile.read().splitlines())
     numAddresses = len(dataArray)
     
-print (dataArray)
 # hex addresses in an array
 print("init-ram 0x00 0xFF")
 x = np.empty((0, 255))
-start = 0
-end = 255
-for address in range (start, end+1):
+
+for address in range (0, 256):
     address = hex(address)
     if (len(address) == 3):
         address = ("0x0" + address[-1])
     x = np.append(x, address)
-            
-print(x)
+    
+#Dictionary for the RAM
+w = dict(zip(x, dataArray.T))
+#print (w)
 print("ram successfully initialized!")
-
 #****************************************************************************************************#
 # Configuring Cache
 
@@ -91,8 +90,7 @@ def Write_miss_policy(write_miss):
         write_miss = "no_write_allocate"
 
 Write_miss_policy(write_miss)
-
-    
+        
 #****************************************************************************************************#
 # Simulating Cache
 
@@ -127,9 +125,15 @@ def cache_view():
 
 def memory_view():
     print("memory_size:")
-    print("memory_used:")
     print("memory_content:")
     print("Address:Data")
+    for i in range(len(x)):
+        if(i == 0):
+          print(x[i] + ":",end="")
+        elif (i % 8 == 0):
+          print("")
+          print(x[i] + ":",end="")
+        print(dataArray[i], end=" ")
 
 def cache_dump():
     print("dumping cache...")
@@ -138,26 +142,29 @@ def memory_dump():
     print("dumping memory...")
 
 #printing the simulating menu and getting the inputs
-print("*** Cache simulator menu ***")
-print("type one command: ")
-print("1. cache-read ")
-print("2. cache-write ")
-print("3. cache-flush ")
-print("4. cache-view ")
-print("5. memory-view ")
-print("6. cache-dump ")
-print("7. memory-dump ")
-print("8. quit ")
-print("****************************")
+def printMenu():
+    print("")
+    print("*** Cache simulator menu ***")
+    print("type one command: ")
+    print("1. cache-read ")
+    print("2. cache-write ")
+    print("3. cache-flush ")
+    print("4. cache-view ")
+    print("5. memory-view ")
+    print("6. cache-dump ")
+    print("7. memory-dump ")
+    print("8. quit ")
+    print("****************************")
 
 while True:
+    printMenu()
     sim_input = input()
     if sim_input == "cache-read":
-        cache_read()     
+        cache_read()
     elif sim_input == "cache-write":
         cache_write()
     elif sim_input == "cache-flush":
-        print("cache_cleared")    
+        print("cache_cleared")
     elif sim_input == "cache-view":
         cache_view()
     elif sim_input == "memory-view":

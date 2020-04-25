@@ -59,28 +59,83 @@ print("cache successfully configured!")
 
 m = 8 #number of address bits
 S = cache_size / (data_size * associativity) #number of sets
-s = math.log(S) #number of set index bits
-b = math.log(data_size) #number of block offset bits
-t = m - (s + b)  #number of tag btis
+s = int(math.log(S, 2)) #number of set index bits
+b = int(math.log(data_size, 2)) #number of block offset bits
+t = m - (s + b)  #number of tag bits
 
-if replace == 1:
-    replace = "random_replacement"
-elif replace == 2:
-    replace = "least_recently_used"
+# Configuring functions
+def Replacement_policy(replace):
+    if replace == 1:
+        replace = "random_replacement"
+    elif replace == 2:
+        replace = "least_recently_used"
 
-if  write_hit == 1: #write the data in both the block in cache and block in RAM
-    write_hit = "write_through"
-elif write_hit == 2: #write the data only in the block in cache
-    write_hit = "write_back"
+Replacement_policy(replace)
 
-if write_miss == 1: #load block from RAM and write it in cache
-    write_miss = "write_allocate"
-elif write_miss == 2: #write the block in RAM and don't load in cache
-    write_miss = "no_write_allocate"
+def Write_hit_policy(write_hit):
+    if  write_hit == 1: #write the data in both the block in cache and block in RAM
+        write_hit = "write_through"
+        coherency = True
+        dirty_bit = 0
+    elif write_hit == 2: #write the data only in the block in cache
+        write_hit = "write_back"
+        coherency = False
+        dirty_bit = 1
+
+Write_hit_policy(write_hit)
+
+def Write_miss_policy(write_miss):
+    if write_miss == 1: #load block from RAM and write it in cache
+        write_miss = "write_allocate"
+    elif write_miss == 2: #write the block in RAM and don't load in cache
+        write_miss = "no_write_allocate"
+
+Write_miss_policy(write_miss)
 
     
 #****************************************************************************************************#
 # Simulating Cache
+
+# Simulating Functions
+def cache_read():
+    print("set:" + s)
+    print("tag:" + t)
+    print("hit:")
+    print("eviction_line:")
+    print("ram_address:")
+    print("data:")
+
+def cache_write():
+    print("set:" + s)
+    print("tag:" + t)
+    print("hit:")
+    print("eviction_line:")
+    print("ram_address:")
+    print("data:")
+    print("dirty_bit:")
+
+def cache_view():
+    print("cache_size:" + cache_size)
+    print("data_block_size:" + data_size)
+    print("associativity:" + associativity)
+    print("replacement_policy:" + replace)
+    print("write_hit_policy:" + write_hit)
+    print("write_miss_policy:" + write_miss)
+    print("number_of_cache_hits:")
+    print("number_of_cache_misses:")
+    print("cache_content:")
+
+def memory_view():
+    print("memory_size:")
+    print("memory_used:")
+    print("memory_content:")
+    print("Address:Data")
+
+def cache_dump():
+    print("dumping cache...")
+
+def memory_dump():
+    print("dumping memory...")
 
 #printing the simulating menu and getting the inputs
 print("*** Cache simulator menu ***")
@@ -98,41 +153,19 @@ print("****************************")
 while True:
     sim_input = input()
     if sim_input == "cache-read":
-        print("set:" + s)
-        print("tag:" + t)
-        print("hit:")
-        print("eviction_line:")
-        print("ram_address:")
-        print("data:")
+        cache_read()     
     elif sim_input == "cache-write":
-        print("set:" + s)
-        print("tag:" + t)
-        print("hit:")
-        print("eviction_line:")
-        print("ram_address:")
-        print("data:")
-        print("dirty_bit:")
+        cache_write()
     elif sim_input == "cache-flush":
         print("cache_cleared")    
     elif sim_input == "cache-view":
-        print("cache_size:" + cache_size)
-        print("data_block_size:" + data_size)
-        print("associativity:" + associativity)
-        print("replacement_policy:" + replace)
-        print("write_hit_policy:" + write_hit)
-        print("write_miss_policy:" + write_miss)
-        print("number_of_cache_hits:")
-        print("number_of_cache_misses:")
-        print("cache_content:")
+        cache_view()
     elif sim_input == "memory-view":
-        print("memory_size:")
-        print("memory_used:")
-        print("memory_content:")
-        print("Address:Data")
+        memory_view()
     elif sim_input == "cache-dump":
-        print()
+        cache_dump()
     elif sim_input == "memory-dump":
-        print()
+        memory_dump()
     elif sim_input == "quit":
         break
 

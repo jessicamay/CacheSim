@@ -59,21 +59,10 @@ try:
         print ("Invalid Data Size.")
         sys.exit()
     associativity = int(input("associativity: ")) #n-way set associative cache holds n lines per set <E>
-    if (associativity != 1) or (associativity != 2) or (associativity != 4):
-        print ("Invalid Associativity.")
-        sys.exit()
     replace = int(input("replacement policy: ")) #replaces a cache entry following a cache miss
-    if (replace != 1) or (replace != 2):
-        print ("Invalid Replace Policy.")
-        sys.exit()
     write_hit = int(input("write hit policy: ")) #where to write the data when an address is hit
-    if (write_hit != 1) or (write_hit != 2):
-        print ("Invalid Write Hit Policy.")
-        sys.exit()
     write_miss = int(input("write miss policy: ")) #where to write the data when an address is a miss
-    if (write_miss != 1) or (write_miss != 2):
-        print ("Invalid Write Miss Policy.")
-        sys.exit()
+    
 except:
     print("Error: Input invalid.")
     sys.exit()

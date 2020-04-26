@@ -4,7 +4,7 @@
 # Section: 510
 # E-mail: jml0400@tamu.edu and jlee232435@tamu.edu
 # Description:
-# e.g. The content of this file implements a cache simulator
+# e.g. The content of this file implements a cache simulation
 
 #READ ME - to run type in the command line: python3 cacheSimulator.py input.txt
 # use which ever input txt file
@@ -27,7 +27,6 @@ except:
 # placing the file into an array
 with open(sys.argv[1]) as inputFile:
     dataArray = np.array (inputFile.read().splitlines())
-    numAddresses = len(dataArray)
     
 # hex addresses in an array
 print("init-ram 0x00 0xFF")
@@ -41,36 +40,52 @@ for address in range (0, 256):
     
 #Dictionary for the RAM
 w = dict(zip(x, dataArray.T))
-#print (f"{w[0x03]}")
 print("ram successfully initialized!")
-#sys.exit()
+
 #****************************************************************************************************#
 # Configuring Cache
 
 #printing the configuring menu and getting the integer inputs
 print("configure the cache: ")
-cache_size = int(input("cache size: ")) #aggregate size of all cache blocks <C>
-data_size = int(input("data block size: ")) #number of bytes per block <B>
-associativity = int(input("associativity: ")) #n-way set associative cache holds n lines per set <E>
-replace = int(input("replacement policy: ")) #replaces a cache entry following a cache miss
-write_hit = int(input("write hit policy: ")) #where to write the data when an address is hit
-write_miss = int(input("write miss policy: ")) #where to write the data when an address is a miss
-print("cache successfully configured!")
+
+try:
+    cache_size = int(input("cache size: ")) #aggregate size of all cache blocks <C>
+    if (cache_size < 8) or (cache_size >256):
+        print ("Invalid Cache Size.")
+        sys.exit()
+    data_size = int(input("data block size: ")) #number of bytes per block <B>
+    associativity = int(input("associativity: ")) #n-way set associative cache holds n lines per set <E>
+    replace = int(input("replacement policy: ")) #replaces a cache entry following a cache miss
+    write_hit = int(input("write hit policy: ")) #where to write the data when an address is hit
+    write_miss = int(input("write miss policy: ")) #where to write the data when an address is a miss
+except:
+    print("Error: Input invalid.")
+    sys.exit()
 
 m = 8 #number of address bits
-S = cache_size / (data_size * associativity) #number of sets
+S = int(cache_size / (data_size * associativity)) #number of sets
 s = int(math.log(S, 2)) #number of set index bits
 b = int(math.log(data_size, 2)) #number of block offset bits
-t = m - (s + b)  #number of tag bits
+t = m - (s + b) #number of tag bits
 
+num_lines = int(cache_size/data_size)
+additional_bits = (num_lines*3)
+number_bits = int(cache_size + additional_bits)
+
+cache = np.full((num_lines,(m+3)), "00")
+tagbit = '0' * t
+for i in range (0, num_lines):
+    cache[i][2] = tagbit
+    cache[i][0] = 0
+    cache[i][1] = 0
+    
+print("cache successfully configured!")
 # Configuring functions
 def Replacement_policy(replace):
     if replace == 1:
         replace = "random_replacement"
     elif replace == 2:
         replace = "least_recently_used"
-
-Replacement_policy(replace)
 
 def Write_hit_policy(write_hit):
     if  write_hit == 1: #write the data in both the block in cache and block in RAM
@@ -99,6 +114,7 @@ Write_miss_policy(write_miss)
 def cache_read():
     print(f"set:{s}")
     print(f"tag:{t}")
+    
     print("hit:")
     print("eviction_line:")
     print("ram_address:")
@@ -123,6 +139,11 @@ def cache_view():
     print("number_of_cache_hits:")
     print("number_of_cache_misses:")
     print("cache_content:")
+    for row in cache:
+        for i in row:
+            print (i, end=" ")
+        print ("")
+        
 
 def memory_view():
     print(f"memory_size: {len(dataArray)}")

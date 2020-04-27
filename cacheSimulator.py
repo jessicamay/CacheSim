@@ -91,6 +91,9 @@ for i in range (0, num_lines):
 cachehit = False
 hitYN = ""
 evict = -1
+cachehitCount = 0
+cachehitMiss = 0
+
 # no change = -1 , change initiated to cache = 0
 wrhit = False
 wrhitYN = ""
@@ -101,27 +104,25 @@ print("cache successfully configured!")
 # Configuring functions
 def Replacement_policy(replace):
     if replace == 1:
-        replace = "random_replacement"
+        return "random_replacement"
     elif replace == 2:
-        replace = "least_recently_used"
+        return "least_recently_used"
 
 def Write_hit_policy(write_hit):
     if  write_hit == 1: #write the data in both the block in cache and block in RAM
-        write_hit = "write_through" #no dirty bit!!
+        return "write_through" #no dirty bit!!
         coherency = True
         dirty_bit = 0
     elif write_hit == 2: #write the data only in the block in cache
-        write_hit = "write_back"
+        return "write_back"
         coherency = False
         dirty_bit = 1
 
-Write_hit_policy(write_hit)
-
 def Write_miss_policy(write_miss):
     if write_miss == 1: #load block from RAM and write it in cache
-        write_miss = "write_allocate"
+        return  "write_allocate"
     elif write_miss == 2: #write the block in RAM and don't load in cache
-        write_miss = "no_write_allocate"
+        return  "no_write_allocate"
 
 Write_miss_policy(write_miss)
 
@@ -181,17 +182,23 @@ def cache_read(address):
     print(cache[index*2][0])
     print(cache[index*2][2])
     '''
+    global cachehitCount
+    global cachehitMiss
     # checking each line of index set in the cache for a hit
     if (cache[index*2][0] == '0') and (cache[index*2+1][0] == '0') :
         cachehit = False
+        cachehitMiss += 1
     elif (cache[index*2][2] == str(tag)) and (cache[index*2][0] == '1'):
         cachehit = True
+        cachehitCount += 1
     elif (cache[index*2+1][0] == '0'):
         cachehit = False
+        cachehitMiss += 1
     elif (cache[index*2+1][2] == str(tag)) and (cache[index*2+1][0] == '1'):
         cachehit = True
-            
-    # cache #hit false/true
+        cachehitCount += 1
+        
+    # cache hit false/true
     if cachehit == False :
         hitYN = "no"
         deeta = dataArray[addressdec]
@@ -305,11 +312,11 @@ def cache_view():
     print(f"cache_size:{cache_size}")
     print(f"data_block_size:{data_size}")
     print(f"associativity:{associativity}")
-    print(f"replacement_policy:{replace}")
-    print(f"write_hit_policy:{write_hit}")
-    print(f"write_miss_policy:{write_miss}")
-    print("number_of_cache_hits:")
-    print("number_of_cache_misses:")
+    print(f"replacement_policy:{Write_miss_policy(replace)}")
+    print(f"write_hit_policy:{Write_miss_policy(write_hit)}")
+    print(f"write_miss_policy:{Write_miss_policy(write_miss)}")
+    print(f"number_of_cache_hits:{cachehitCount}")
+    print(f"number_of_cache_misses:{cachehitMiss}")
     print("cache_content:")
     for row in cache:
         for i in row:
@@ -336,14 +343,8 @@ def cache_dump():
             for i in row[3:]:
                 cachefile.write(f"{i} ")
             cachefile.write("\n")
-                
     cachefile.close()
-    '''
-    c = np.savetxt('cache.txt', cache, delimiter =', ')
-    a = open("cache.txt", 'r')# open file in read mode
-    print("the file contains:")
-    print(a.read())
-    '''
+    
 def memory_dump():
     with open("ram.txt", "w+") as memfile:
         for i in range(len(x)):

@@ -92,9 +92,12 @@ cachehit = False
 hitYN = ""
 evict = -1
 # no change = -1 , change initiated to cache = 0
-
+wrhit = False
+wrhitYN = ""
+dirty_bit = 0
 
 print("cache successfully configured!")
+
 # Configuring functions
 def Replacement_policy(replace):
     if replace == 1:
@@ -104,7 +107,7 @@ def Replacement_policy(replace):
 
 def Write_hit_policy(write_hit):
     if  write_hit == 1: #write the data in both the block in cache and block in RAM
-        write_hit = "write_through"
+        write_hit = "write_through" #no dirty bit!!
         coherency = True
         dirty_bit = 0
     elif write_hit == 2: #write the data only in the block in cache
@@ -144,9 +147,11 @@ def Dec_to_Bin(address):
     return bin(int(address)).lstrip("0b").rstrip("L")
 
 def Bin_to_Hex(address):
-    y = Bin_to_Dec(address)
-    return (hex(y)).lstrip("0x")
-    
+    if (address == tagbit):
+        return (hex(int(address)))[2:] +"0"
+    else :
+        convert = hex(int(address, 2))
+        return ("0" + convert.lstrip("0x").upper())
         
 #****************************************************************************************************#
 # Simulating Cache
@@ -165,8 +170,7 @@ def cache_read(address):
     index = Bin_to_Dec(str("".join(map(str, CI))))
     
     CT = binary_bits[:(s+b)]
-    tagbin = str("".join(map(str, CT)))
-    tag = Bin_to_Hex (tagbin)
+    tag = Bin_to_Hex(str("".join(map(str, CT))))
     
     addressdec = int(Hex_to_Dec(address))
     '''
@@ -191,7 +195,6 @@ def cache_read(address):
     if cachehit == False :
         hitYN = "no"
         deeta = dataArray[addressdec]
-        evict = 0
         #if line 1 of set is empty
         if cache[index*2][0] == '0':
             #change the valid bit
@@ -200,6 +203,7 @@ def cache_read(address):
             cache[index*2][2] = tag
             #load data from RAM into cache
             bitupdate = 3
+            evict = 0
             if (addressdec % 8 == 0):
                 for curr in dataArray[addressdec:(addressdec+8)]:
                     cache[index*2][bitupdate] = curr
@@ -217,6 +221,7 @@ def cache_read(address):
             cache[index*2+1][2] = tag
             #load data from RAM into cache
             bitupdate = 3
+            evict = 1
             if (addressdec % 8 == 0):
                 for curr in dataArray[addressdec:(addressdec+8)]:
                     cache[index*2+1][bitupdate] = curr
@@ -242,18 +247,59 @@ def cache_read(address):
     print(f"data:{deeta}")
 
 def cache_write(address, data):
+#convert hex to binary and then split binary bits to get offset, set, tag bits
+    binary_bits = [int(d) for d in str(Hex_to_Bin(address))]
+
+    #convert the set bits to decimal and assign them to variables for comparison
+    CO = binary_bits[(len(binary_bits)-b):]
+    offset = Bin_to_Dec(str("".join(map(str, CO))))
+    
+    CI = binary_bits[t:(len(binary_bits))-b]
+    index = Bin_to_Dec(str("".join(map(str, CI))))
+    
+    CT = binary_bits[:(s+b)]
+    tagbin = str("".join(map(str, CT))))
+    tag = Bin_to_Hex(tagbin)
+
+    addressdec = int(Hex_to_Dec(address))
+    # checking each line of index set in the cache for a hit
+    if (cache[index*2][0] == '0') and (cache[index*2+1][0] == '0') :
+        wrhit = False
+    elif (cache[index*2][2] == str(tag)) and (cache[index*2][0] == '1'):
+        wrhit = True
+    elif (cache[index*2+1][0] == '0'):
+        wrhit = False
+    elif (cache[index*2+1][2] == str(tag)) and (cache[index*2+1][0] == '1'):
+        wrhit = True
+    
+    if wrhit == False : # do write miss policy
+        wrhitYN == "no"
+        evict = 0
+        if write_miss == "write_allocate": # load block from RAM and write it in cache
+            #write_allocating...
+        elif write_miss == "no_write_allocate": # write the block in RAM and don't load in cache
+            #no write_allocating...
+        
+    elif wrhit == True : # do write hit policy
+        wrhitYN == "yes"
+        evict = -1
+        if write_hit == "write_through": # write the data in both the block in cache and block in RAM
+            #write_through...
+        elif write_hit == "write_back": # write the data only in the block in cache
+            #write_back...
+            
     print(f"set:{index}")
     print(f"tag:{tag}")
-    print(f"hit:{hitYN}")
-    print("eviction_line:")
-    print("ram_address:")
-    print("data:")
+    print(f"hit:{wrhitYN}")
+    print(f"eviction_line: {evict}")
+    print(f"ram_address:{address}")
+    print(f"data:{deeta}")
     print("dirty_bit:")
     
-    
-
 def cache_flush():
     print("cache_cleared")
+    
+    #In case of cache flush, every line becomes valid bits all to 0 again
 
 def cache_view():
     print(f"cache_size:{cache_size}")
@@ -288,15 +334,23 @@ def cache_dump():
     with open("cache.txt", "w+") as cachefile:
         for row in cache:
             for i in row:
-                cachefile.write(cache[x[i]] + "\n")
-
+                cachefile.write(f"{i} ")
+            cachefile.write("\n")
+                
+    cachefile.close()
+    '''
+    c = np.savetxt('cache.txt', cache, delimiter =', ')
+    a = open("cache.txt", 'r')# open file in read mode
+    print("the file contains:")
+    print(a.read())
+    '''
 def memory_dump():
     with open("ram.txt", "w+") as memfile:
         for i in range(len(x)):
             if (i == len(x)-1):
-                memfile.write(dataArray[x[i]])
+                memfile.write(dataArray[i])
             else:
-                memfile.write(dataArray[x[i]] + "\n")
+                memfile.write(dataArray[i] + "\n")
 
 #printing the simulating menu and getting the inputs
 def printMenu():
@@ -316,7 +370,7 @@ def printMenu():
 while True:
     printMenu()
     sim_input = input()
-    if "cache-read" in sim_input: #in progress
+    if "cache-read" in sim_input: #in progress - issue with 0x0-0x09
         #split input to get the address for passing into cache_read
         address = sim_input.split()
         address = address[1]
@@ -327,16 +381,15 @@ while True:
         address = addressdata[1]
         data = addressdata[2]
         cache_write(address, data)
-        
     elif sim_input == "cache-flush": #in progress
         cache_flush()
-    elif sim_input == "cache-view": #almost done
+    elif sim_input == "cache-view": #done
         cache_view()
     elif sim_input == "memory-view": #done
         memory_view()
-    elif sim_input == "cache-dump": #in progress
+    elif sim_input == "cache-dump": #done
         cache_dump()
-    elif sim_input == "memory-dump": #in progress
+    elif sim_input == "memory-dump": #done
         memory_dump()
-    elif sim_input == "quit":
+    elif sim_input == "quit": #done
         break

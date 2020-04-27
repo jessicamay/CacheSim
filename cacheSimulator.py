@@ -41,6 +41,7 @@ for address in range (0, 256):
     
 #Dictionary for the RAM
 w = dict(zip(x, dataArray.T))
+
 print("ram successfully initialized!")
 
 #****************************************************************************************************#
@@ -146,13 +147,6 @@ def Dec_to_Bin(address):
 
 # Simulating Functions
 def cache_read(address):
-    print(f"set:{s}")
-    print(f"tag:{t}")
-    print(f"hit:{hitYN}")
-    print("eviction_line:")
-    print(f"ram_address:{address}")
-    print(f"data:{w[address]}")
-
     #convert hex to binary and then split binary bits to get offset, set, tag bits
     #binary_bits = np.array(Hex_to_Bin(address))
     binary_bits = [int(d) for d in str(Hex_to_Bin(address))]
@@ -167,28 +161,58 @@ def cache_read(address):
     CT = binary_bits[:(s+b)]
     tag = Bin_to_Dec(str("".join(map(str, CT))))
     
-    count = 0
+    count1 = 0
+    count2 = 0
     # each line of set in the cache
     for i in cache[index*2] :
         if (i == 0) or (i == "00"):
-            count +=1
-        if (count > 3):
+            count1 +=1
+        if (count1 > 3):
             cachehit = False
+        
     for i in cache[index*2+1] :
         if (i == 0) or (i == "00"):
-            count +=1
-        if (count > 3):
+            count2 +=1
+        if (count2 > 3):
             cachehit = False
-    
     if cachehit == False :
         hitYN == "no"
-        cache[index][0] = 1
-        # load data from RAM into cache
-        print(cache[index][1])
-        
+        if (count1) > 3 :
+            #change the valid bit
+            cache[index*2][0] = 1
+            #change the tag bit
+            cache[index*2][2] = tag
+            #load data from RAM into cache
+            addressdec = int(Hex_to_Dec(address))
+            bitupdate = 3
+            if (addressdec % 8 == 0):
+                for curr in dataArray[addressdec:(addressdec+8)]:
+                    cache[index*2][bitupdate] = curr
+                    bitupdate +=1
+            else :
+                displace = addressdec % 8
+                for curr in dataArray[(addressdec-displace):(addressdec+(8-displace))]:
+                    cache[index*2][bitupdate] = curr
+                    bitupdate +=1
+            #for i in dataArray[address]:
+            print(cache)
+            evict = 0
+        else:
+            cache[index*2+1][0] = 1
+            print(cache[index*2+1])
+            # load data from RAM into cache
+            print(cache[index*2+1][1])
+            evict = 0
     elif cachehit == True :
         hitYN == "yes"
-            
+        
+    print(f"set:{s}")
+    print(f"tag:{t}")
+    print(f"hit:{hitYN}")
+    print(f"eviction_line: {evict}")
+    print(f"ram_address:{address}")
+    print(f"data:{w[address]}")
+
     '''
     #if bounds meet then put it into cache array (the bounds are set by what you inputed in cache configuration)
     if (offset <= b & index <= s & tag <= t):

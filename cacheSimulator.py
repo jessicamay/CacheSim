@@ -249,7 +249,7 @@ def cache_read(address):
 def cache_write(address, data):
 #convert hex to binary and then split binary bits to get offset, set, tag bits
     binary_bits = [int(d) for d in str(Hex_to_Bin(address))]
-
+'''
     #convert the set bits to decimal and assign them to variables for comparison
     CO = binary_bits[(len(binary_bits)-b):]
     offset = Bin_to_Dec(str("".join(map(str, CO))))
@@ -258,7 +258,7 @@ def cache_write(address, data):
     index = Bin_to_Dec(str("".join(map(str, CI))))
     
     CT = binary_bits[:(s+b)]
-    tagbin = str("".join(map(str, CT))))
+    tagbin = str("".join(map(str, CT)))
     tag = Bin_to_Hex(tagbin)
 
     addressdec = int(Hex_to_Dec(address))
@@ -287,7 +287,7 @@ def cache_write(address, data):
             #write_through...
         elif write_hit == "write_back": # write the data only in the block in cache
             #write_back...
-            
+
     print(f"set:{index}")
     print(f"tag:{tag}")
     print(f"hit:{wrhitYN}")
@@ -295,7 +295,7 @@ def cache_write(address, data):
     print(f"ram_address:{address}")
     print(f"data:{deeta}")
     print("dirty_bit:")
-    
+'''
 def cache_flush():
     print("cache_cleared")
     
@@ -333,7 +333,7 @@ def cache_dump():
     print("cache dump...")
     with open("cache.txt", "w+") as cachefile:
         for row in cache:
-            for i in row:
+            for i in row[3:]:
                 cachefile.write(f"{i} ")
             cachefile.write("\n")
                 

@@ -1,6 +1,6 @@
 # File: CacheSimulator.py
 # Author: Jessica Li and Justin Lee
-# Date: 04/21/2020
+# Date: 04/30/2020
 # Section: 510
 # E-mail: jml0400@tamu.edu and jlee232435@tamu.edu
 # Description:
@@ -13,6 +13,7 @@ import os
 import sys
 import math
 import numpy as np
+import random as ran
 
 #****************************************************************************************************#
 # Initializing the physical memory
@@ -93,11 +94,14 @@ hitYN = ""
 evict = -1
 cachehitCount = 0
 cachehitMiss = 0
+#empty list to keep track of LRU cache line, pop after referenced~!
+tracker =[]
 
 # no change = -1 , change initiated to cache = 0
 wrhit = False
 wrhitYN = ""
 dirty_bit = 0
+
 
 print("cache successfully configured!")
 
@@ -105,6 +109,7 @@ print("cache successfully configured!")
 def Replacement_policy(replace):
     if replace == 1:
         return "random_replacement"
+        
     elif replace == 2:
         return "least_recently_used"
 
@@ -123,8 +128,6 @@ def Write_miss_policy(write_miss):
         return  "write_allocate"
     elif write_miss == 2: #write the block in RAM and don't load in cache
         return  "no_write_allocate"
-
-Write_miss_policy(write_miss)
 
 #Conversion Functions
 
@@ -197,11 +200,15 @@ def cache_read(address):
     elif (cache[index*2+1][2] == str(tag)) and (cache[index*2+1][0] == '1'):
         cachehit = True
         cachehitCount += 1
+    else:
+        cachehit =False
+        cachehitMiss += 1
         
     # cache hit false/true
     if cachehit == False :
         hitYN = "no"
         deeta = dataArray[addressdec]
+        #load the ram line into the Cache
         #if line 1 of set is empty
         if cache[index*2][0] == '0':
             #change the valid bit
@@ -238,8 +245,36 @@ def cache_read(address):
                 for curr in dataArray[(addressdec-displace):(addressdec+(8-displace))]:
                     cache[index*2+1][bitupdate] = curr
                     bitupdate +=1
-        #else:
+        #replacement policies
+        
+        #random replacement
+        elif (cache[index*2][0] == '1') and (cache[index*2+1][0] == '1') and (replacement == 1) :
+            #generate a random number line
+            x = ran.randint(index*2,((index*2)+1))
+            print(f"rand int {x} selected")
+            cache[x][0] = 1
+            #change the tag bit
+            cache[x][2] = tag
+            #load data from RAM into cache
+            bitupdate = 3
+            evict = 1
+            #if the line's dirty bit = 1 and write allocate update the ram
+            if (cache[x][1] == 1) and (write_hit == 1) :
+                if (addressdec % 8 == 0):
+                    for curr in dataArray[addressdec:(addressdec+8)]:
+                        cache[x][bitupdate] = curr
+                        bitupdate +=1
+                else :
+                    displace = addressdec % 8
+                    for curr in dataArray[(addressdec-displace):(addressdec+(8-displace))]:
+                        cache[x][bitupdate] = curr
+                        bitupdate +=1
+        #least recently used
+        
+        #elif (replacement == 2):
+            
             #check for least recently used...
+    
     elif cachehit == True :
         hitYN = "yes"
         evict = -1
@@ -256,7 +291,6 @@ def cache_read(address):
 def cache_write(address, data):
 #convert hex to binary and then split binary bits to get offset, set, tag bits
     binary_bits = [int(d) for d in str(Hex_to_Bin(address))]
-'''
     #convert the set bits to decimal and assign them to variables for comparison
     CO = binary_bits[(len(binary_bits)-b):]
     offset = Bin_to_Dec(str("".join(map(str, CO))))
@@ -269,6 +303,7 @@ def cache_write(address, data):
     tag = Bin_to_Hex(tagbin)
 
     addressdec = int(Hex_to_Dec(address))
+    '''
     # checking each line of index set in the cache for a hit
     if (cache[index*2][0] == '0') and (cache[index*2+1][0] == '0') :
         wrhit = False
@@ -284,17 +319,17 @@ def cache_write(address, data):
         evict = 0
         if write_miss == "write_allocate": # load block from RAM and write it in cache
             #write_allocating...
-        elif write_miss == "no_write_allocate": # write the block in RAM and don't load in cache
+        elif write_miss == "no_write_allocate": # write the update RAM and don't load in cache
             #no write_allocating...
         
     elif wrhit == True : # do write hit policy
         wrhitYN == "yes"
         evict = -1
-        if write_hit == "write_through": # write the data in both the block in cache and block in RAM
+        if write_hit == "write_through": # write the data block in both in cache and RAM
             #write_through...
         elif write_hit == "write_back": # write the data only in the block in cache
             #write_back...
-
+    '''
     print(f"set:{index}")
     print(f"tag:{tag}")
     print(f"hit:{wrhitYN}")
@@ -302,7 +337,7 @@ def cache_write(address, data):
     print(f"ram_address:{address}")
     print(f"data:{deeta}")
     print("dirty_bit:")
-'''
+    
 def cache_flush():
     print("cache_cleared")
     

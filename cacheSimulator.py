@@ -94,6 +94,7 @@ hitYN = ""
 evict = -1
 cachehitCount = 0
 cachehitMiss = 0
+
 #empty list to keep track of LRU cache line, pop after referenced~!
 tracker =[]
 
@@ -101,7 +102,6 @@ tracker =[]
 wrhit = False
 wrhitYN = ""
 dirty_bit = 0
-
 
 print("cache successfully configured!")
 
@@ -159,8 +159,6 @@ def Bin_to_Hex(address):
         
 #****************************************************************************************************#
 # Simulating Cache
-
-# Simulating Functions
 def cache_read(address):
     #convert hex to binary and then split binary bits to get offset, set, tag bits
     #binary_bits = np.array(Hex_to_Bin(address))
@@ -222,11 +220,13 @@ def cache_read(address):
                 for curr in dataArray[addressdec:(addressdec+8)]:
                     cache[index*2][bitupdate] = curr
                     bitupdate +=1
+                tracker.append(cache[index*2])
             else :
                 displace = addressdec % 8
                 for curr in dataArray[(addressdec-displace):(addressdec+(8-displace))]:
                     cache[index*2][bitupdate] = curr
                     bitupdate +=1
+                tracker.append(cache[index*2])
         #if line 2 of set is empty
         elif cache[index*2+1][0] == '0' :
             #change the valid bit
@@ -240,47 +240,68 @@ def cache_read(address):
                 for curr in dataArray[addressdec:(addressdec+8)]:
                     cache[index*2+1][bitupdate] = curr
                     bitupdate +=1
+                tracker.append(cache[index*2+1])
             else :
                 displace = addressdec % 8
                 for curr in dataArray[(addressdec-displace):(addressdec+(8-displace))]:
                     cache[index*2+1][bitupdate] = curr
                     bitupdate +=1
+                tracker.append(cache[index*2+1])
         #replacement policies
         
         #random replacement
-        elif (cache[index*2][0] == '1') and (cache[index*2+1][0] == '1') and (replacement == 1) :
+        elif (cache[index*2][0] == '1') and (cache[index*2+1][0] == '1') and (replace == 1) :
             #generate a random number line
             x = ran.randint(index*2,((index*2)+1))
-            print(f"rand int {x} selected")
+            #print(f"rand int {x} selected")
             cache[x][0] = 1
             #change the tag bit
             cache[x][2] = tag
             #load data from RAM into cache
             bitupdate = 3
-            evict = 1
+            evict = x
             #if the line's dirty bit = 1 and write allocate update the ram
             if (cache[x][1] == 1) and (write_hit == 1) :
                 if (addressdec % 8 == 0):
                     for curr in dataArray[addressdec:(addressdec+8)]:
                         cache[x][bitupdate] = curr
                         bitupdate +=1
+                    tracker.append(cache[x])
                 else :
                     displace = addressdec % 8
                     for curr in dataArray[(addressdec-displace):(addressdec+(8-displace))]:
                         cache[x][bitupdate] = curr
                         bitupdate +=1
+                    tracker.append(cache[x])
         #least recently used
-        
-        #elif (replacement == 2):
-            
-            #check for least recently used...
-    
+        elif (cache[index*2][0] == '1') and (cache[index*2+1][0] == '1') and (replace == 2) :
+            #print(tracker[0])
+            #print (cache[0])
+            for line in range (0, len(cache)):
+                if ((cache[line] == tracker[0]).all() == True):
+                    cache[line][0] = 1
+                    #change the tag bit
+                    cache[line][2] = tag
+                    #load data from RAM into cache
+                    bitupdate = 3
+                    evict = line
+                    if (addressdec % 8 == 0):
+                        for curr in dataArray[addressdec:(addressdec+8)]:
+                            cache[line][bitupdate] = curr
+                            bitupdate +=1
+                        tracker.append(cache[line])
+                    else :
+                        displace = addressdec % 8
+                        for curr in dataArray[(addressdec-displace):(addressdec+(8-displace))]:
+                            cache[index*2+1][bitupdate] = curr
+                            bitupdate +=1
+                        tracker.append(cache[line])
+            tracker.pop(0)
     elif cachehit == True :
         hitYN = "yes"
         evict = -1
         address = -1
         deeta = cache[index*2][offset+3]
-        
     print(f"set:{index}")
     print(f"tag:{tag}")
     print(f"hit:{hitYN}")
@@ -303,7 +324,6 @@ def cache_write(address, data):
     tag = Bin_to_Hex(tagbin)
 
     addressdec = int(Hex_to_Dec(address))
-    '''
     # checking each line of index set in the cache for a hit
     if (cache[index*2][0] == '0') and (cache[index*2+1][0] == '0') :
         wrhit = False
@@ -317,19 +337,19 @@ def cache_write(address, data):
     if wrhit == False : # do write miss policy
         wrhitYN == "no"
         evict = 0
-        if write_miss == "write_allocate": # load block from RAM and write it in cache
+        if write_miss == 1 : # load block from RAM and write it in cache
             #write_allocating...
-        elif write_miss == "no_write_allocate": # write the update RAM and don't load in cache
+        elif write_miss == 2: # write the update RAM and don't load in cache
             #no write_allocating...
         
     elif wrhit == True : # do write hit policy
         wrhitYN == "yes"
         evict = -1
-        if write_hit == "write_through": # write the data block in both in cache and RAM
+        if write_hit == 1: # write the data block in both in cache and RAM
             #write_through...
-        elif write_hit == "write_back": # write the data only in the block in cache
+        elif write_hit == 2: # write the data only in the block in cache
             #write_back...
-    '''
+            
     print(f"set:{index}")
     print(f"tag:{tag}")
     print(f"hit:{wrhitYN}")
@@ -340,6 +360,9 @@ def cache_write(address, data):
     
 def cache_flush():
     print("cache_cleared")
+    # np.delete()
+    # depends on write back/through policy
+    #write back you have to update ram with cache lines that have dirty bit = 1
     
     #In case of cache flush, every line becomes valid bits all to 0 again
 
@@ -347,8 +370,8 @@ def cache_view():
     print(f"cache_size:{cache_size}")
     print(f"data_block_size:{data_size}")
     print(f"associativity:{associativity}")
-    print(f"replacement_policy:{Write_miss_policy(replace)}")
-    print(f"write_hit_policy:{Write_miss_policy(write_hit)}")
+    print(f"replacement_policy:{Replacement_policy(replace)}")
+    print(f"write_hit_policy:{Write_hit_policy(write_hit)}")
     print(f"write_miss_policy:{Write_miss_policy(write_miss)}")
     print(f"number_of_cache_hits:{cachehitCount}")
     print(f"number_of_cache_misses:{cachehitMiss}")
@@ -358,7 +381,6 @@ def cache_view():
             print (i, end=" ")
         print ("")
         
-
 def memory_view():
     print(f"memory_size: {len(dataArray)}")
     print("memory_content:")
@@ -406,7 +428,7 @@ def printMenu():
 while True:
     printMenu()
     sim_input = input()
-    if "cache-read" in sim_input: #in progress - issue with 0x0-0x09
+    if "cache-read" in sim_input: #in progress
         #split input to get the address for passing into cache_read
         address = sim_input.split()
         address = address[1]

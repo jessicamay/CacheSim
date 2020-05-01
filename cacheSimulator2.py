@@ -59,9 +59,21 @@ try:
         print ("Invalid Data Size.")
         sys.exit()
     associativity = int(input("associativity: ")) #n-way set associative cache holds n lines per set <E>
+    if ((associativity < 1) or (associativity == 3) or (associativity > 4)):
+        print ("Invalid Associativity Size.")
+        sys.exit()
     replace = int(input("replacement policy: ")) #replaces a cache entry following a cache miss
+    if ((replace < 1) or (replace > 2)):
+        print ("Invalid Replacement Policy.")
+        sys.exit()
     write_hit = int(input("write hit policy: ")) #where to write the data when an address is hit
+    if ((write_hit < 1) or (write_hit > 2)):
+        print ("Invalid Hit Policy.")
+        sys.exit()
     write_miss = int(input("write miss policy: ")) #where to write the data when an address is a miss
+    if ((write_miss < 1) or (write_miss > 2)):
+        print ("Invalid Miss Policy.")
+        sys.exit()
     
 except:
     print("Error: Input invalid.")
@@ -74,12 +86,10 @@ b = int(math.log(data_size, 2)) #number of block offset bits
 t = m - (s + b) #number of tag bits
 
 num_lines = int(associativity*S)
-
-if (associativity == 4):
-    cache = np.full((num_lines,(m+3)), "000")
-else :
-    cache = np.full((num_lines,(m+3)), "00")
+#cache = np.full((num_lines,(m+3)), "00", dtype=object)
 #tag bit type is a string so it's not updating to the correct
+
+cache = np.full((num_lines,(m+3)), "00")
 for i in range (0, num_lines):
     #valid bit
     cache[i][0] = 0
@@ -157,6 +167,10 @@ def Bin_to_Hex(address):
         convert = hex(int(address, 2))
         return ("0" + convert.lstrip("0x").upper())
         
+#def tagChange(address, tagbit):
+  #  if len(tag) :
+        
+        
 #****************************************************************************************************#
 # Simulating Cache
 def cache_read(address):
@@ -215,12 +229,11 @@ def cache_read(address):
               
     if (associativity > 1):
         for element in range (0,len(cache)-2):
-            print (element)
+            #print (element)
                 #valid bit
             if (cache[index*associativity+element][0] == '0') and (cache[index*associativity+element][2] != str(tag)):
                 cachehit = False
                 cachehitMiss += 1
-                
                 break
             elif (cache[(index*associativity)+element][0] == '1') and (cache[index*associativity+element][2] == str(tag)):
                 cachehit = True
@@ -234,7 +247,9 @@ def cache_read(address):
     if cachehit == False :
         hitYN = "no"
         deeta = dataArray[addressdec]
+        evict = 0
         #load the ram line into the Cache
+        
         #if line 1 of set is empty
         if cache[index*associativity+element][0] == '0':
             #change the valid bit
@@ -244,7 +259,6 @@ def cache_read(address):
             cache[index*associativity+element][2] = tag
             #load data from RAM into cache
             bitupdate = 3
-            evict = 0
             if (addressdec % 8 == 0):
                 for curr in dataArray[addressdec:(addressdec+8)]:
                     cache[index*associativity+element][bitupdate] = curr
@@ -256,7 +270,7 @@ def cache_read(address):
                     cache[index*associativity+element][bitupdate] = curr
                     bitupdate +=1
                 tracker.append(cache[index*associativity+element])
-
+    
         #replacement policies
         
         #random replacement
@@ -308,15 +322,18 @@ def cache_read(address):
                             bitupdate +=1
                         tracker.append(cache[line])
             tracker.pop(0)
+            
     elif cachehit == True :
         hitYN = "yes"
         evict = -1
         address = -1
         deeta = cache[index*2][offset+3]
+    
+#tag = tagChange(tag)
     print(f"set:{index}")
     print(f"tag:{tag}")
     print(f"hit:{hitYN}")
-    print(f"eviction_line: {evict}")
+    print(f"eviction_line:{evict}")
     print(f"ram_address:{address}")
     print(f"data:{deeta}")
 
@@ -389,14 +406,16 @@ def cache_write(address, data):
             cache[line][offset+3] = data.upper().lstrip("0X")
             #set dirty bit to 1
             cache[line][1] = 1
-            
+            dirty_bit=cache[line][1]
+    
+  #  tag = tagChange(tag)
     print(f"set:{index}")
     print(f"tag:{tag}")
     print(f"hit:{wrhitYN}")
-    print(f"eviction_line: {evict}")
+    print(f"eviction_line:{evict}")
     print(f"ram_address:{address}")
     print(f"data:{data}")
-    print("dirty_bit:") # what is this supposed to print the bit of?
+    print("dirty_bit:{dirty_bit}") # what is this supposed to print the bit of?
     
 def cache_flush():
     print("cache_cleared")
@@ -491,3 +510,5 @@ while True:
         memory_dump()
     elif sim_input == "quit": #done
         break
+    else:
+        print("Sorry this is not implemented. Please choose one of the other options.")
